@@ -1,5 +1,8 @@
 # StellarSwap — Token Liquidity Pool
 
+[![CI Build Status](https://github.com/kratos1241/StellarSwap/actions/workflows/ci.yml/badge.svg)](https://github.com/kratos1241/StellarSwap/actions/workflows/ci.yml)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/lovely-daffodil-2f30f2/deploy-status)](https://app.netlify.com/sites/lovely-daffodil-2f30f2/deploys)
+
 **Live Deployment**: [lovely-daffodil-2f30f2.netlify.app](https://lovely-daffodil-2f30f2.netlify.app/)
 
 > Decentralised token swap exchange with liquidity pools on Stellar Soroban testnet.
@@ -162,8 +165,16 @@ Fee: 30 bps (0.30 %). Fee stays in the pool, accruing to liquidity providers.
 ### Mobile Responsive UI (~375px)
 ![Mobile View](./screenshots/mobileview.png)
 
-### CI/CD Pipeline Run
-Below is the output from running `bash ci.sh`, confirming that all smart contract tests, WASM build targets, Next.js static builds, and TypeScript checks pass:
+### CI/CD Pipeline
+Our CI/CD pipeline runs **4 separate parallel jobs** on GitHub Actions for every commit and pull request to ensure the stability of both the smart contracts and the frontend:
+
+1. **🧪 Contract Unit Tests**: Runs all 10 Rust unit tests across `token`, `lp_share`, and `pool` crates using `cargo test --workspace --features testutils`.
+2. **📦 Contract WASM Build**: Compiles all contracts to WebAssembly using `cargo build --target wasm32-unknown-unknown --release --workspace` to ensure they build successfully for the Soroban environment.
+3. **🔍 Frontend TypeScript Check**: Runs static type check verification on the Next.js app using `tsc --noEmit` to prevent typescript regressions.
+4. **🚀 Frontend Production Build**: Runs a production build and static HTML export via `next build` to confirm zero bundler/optimization issues.
+
+#### Local CI Execution
+Below is the output from running the unified local verification script (`bash ci.sh`), confirming that all check stages pass:
 ```bash
 $ bash ci.sh
 
