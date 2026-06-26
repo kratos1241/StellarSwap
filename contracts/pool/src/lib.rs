@@ -275,6 +275,7 @@ mod tests {
     use super::*;
     use soroban_sdk::{testutils::Address as _, Env};
 
+    #[allow(dead_code)]
     struct Setup {
         env: Env,
         pool: PoolContractClient<'static>,

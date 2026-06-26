@@ -18,12 +18,15 @@ run_test() {
   local cmd="$2"
   printf "\n${BOLD}[TEST %d] %s${RESET}\n" "$((passed + failed + 1))" "$name"
   printf "  CMD: %s\n" "$cmd"
-  if eval "$cmd" 2>&1 | sed 's/^/  /'; then
+  local out
+  if out=$(eval "$cmd" 2>&1); then
+    echo "$out" | sed 's/^/  /'
     printf "  ${PASS} PASSED\n"
-    ((passed++))
+    ((passed++)) || true
   else
+    echo "$out" | sed 's/^/  /'
     printf "  ${FAIL} FAILED\n"
-    ((failed++))
+    ((failed++)) || true
   fi
 }
 
@@ -40,21 +43,23 @@ run_test \
 
 # ── Test 2: WASM compilation ───────────────────────────────────────────────────
 # Verifies all three contracts compile to valid WASM for Soroban.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 run_test \
   "WASM Build (cargo build --target wasm32-unknown-unknown)" \
-  "cargo build --target wasm32-unknown-unknown --release --workspace 2>&1"
+  "(cd \"$SCRIPT_DIR\" && cargo build --target wasm32-unknown-unknown --release --workspace)"
 
 # ── Test 3: Frontend TypeScript type check ─────────────────────────────────────
 # Catches any type errors without emitting JS output.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 run_test \
   "Frontend TypeScript Check (tsc --noEmit)" \
-  "cd frontend && npm run type-check 2>&1 && cd .."
+  "(cd \"$SCRIPT_DIR/frontend\" && npm run type-check)"
 
 # ── Test 4: Frontend production build ─────────────────────────────────────────
 # Full Next.js static export — catches import/bundling issues and lint errors.
 run_test \
   "Frontend Production Build (next build)" \
-  "cd frontend && npm run build 2>&1 && cd .."
+  "(cd \"$SCRIPT_DIR/frontend\" && npm run build)"
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""

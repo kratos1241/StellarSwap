@@ -1,45 +1,33 @@
 "use client";
 
-import {
-  StellarWalletsKit,
-  WalletNetwork,
-  FREIGHTER_ID,
-  FreighterModule,
-} from "@creit.tech/stellar-wallets-kit";
+// v2 API: all methods are static on StellarWalletsKit; modules are subpath imports.
+import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
+import { FREIGHTER_ID, FreighterModule } from "@creit.tech/stellar-wallets-kit/modules/freighter";
 import { NETWORK } from "./contracts";
 
-let _kit: StellarWalletsKit | null = null;
+let _initialized = false;
 
-export function getWalletsKit(): StellarWalletsKit {
-  if (!_kit) {
-    _kit = new StellarWalletsKit({
-      network: NETWORK === "mainnet" ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET,
-      selectedWalletId: FREIGHTER_ID,
-      modules: [new FreighterModule()],
-    });
-  }
-  return _kit;
+function ensureInit() {
+  if (_initialized) return;
+  StellarWalletsKit.init({
+    network: NETWORK === "mainnet" ? Networks.PUBLIC : Networks.TESTNET,
+    selectedWalletId: FREIGHTER_ID,
+    modules: [new FreighterModule()],
+  });
+  _initialized = true;
 }
 
 export async function connectWallet(): Promise<string> {
-  const kit = getWalletsKit();
-  await kit.openModal({
-    onWalletSelected: async (option) => {
-      kit.setWallet(option.id);
-    },
-  });
-  const { address } = await kit.getAddress();
+  ensureInit();
+  const { address } = await StellarWalletsKit.authModal();
   return address;
 }
 
-export async function signTransaction(xdr: string, publicKey: string): Promise<string> {
-  const kit = getWalletsKit();
-  const { signedTxXdr } = await kit.signTransaction(xdr, {
-    address: publicKey,
+export async function signTransaction(xdr: string, _publicKey: string): Promise<string> {
+  ensureInit();
+  const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
     networkPassphrase:
-      NETWORK === "mainnet"
-        ? "Public Global Stellar Network ; September 2015"
-        : "Test SDF Network ; September 2015",
+      NETWORK === "mainnet" ? Networks.PUBLIC : Networks.TESTNET,
   });
   return signedTxXdr;
 }

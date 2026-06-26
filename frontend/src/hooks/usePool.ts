@@ -1,49 +1,65 @@
 "use client";
 
 import useSWR from "swr";
-import { SorobanRpc, scValToNative, xdr, Address, nativeToScVal } from "@stellar/stellar-sdk";
+import {
+  SorobanRpc,
+  scValToNative,
+  xdr,
+  Address,
+  TransactionBuilder,
+  Account,
+  Networks,
+  Operation,
+} from "@stellar/stellar-sdk";
 import { CONTRACT_ADDRESSES, getRpc } from "@/lib/contracts";
 
-const POLL_INTERVAL = 6_000; // 6 s
+const POLL_INTERVAL = 6_000;
+const DUMMY_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
-// ── Read-only contract view calls ─────────────────────────────────────────────
+// ── Generic read-only simulation ───────────────────────────────────────────────
 
 async function viewCall<T>(contractId: string, method: string, args: xdr.ScVal[] = []): Promise<T> {
   const rpc = getRpc();
-  const contract = new SorobanRpc.Server(rpc["serverURL"]);
-
-  // Use simulateTransaction with an unsigned tx to read state.
-  const { result } = await rpc.simulateTransaction(
-    new (await import("@stellar/stellar-sdk")).TransactionBuilder(
-      { accountId: () => "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", sequence: () => "0", incrementSequenceNumber: () => {} } as never,
-      { fee: "100", networkPassphrase: "Test SDF Network ; September 2015" }
+  const account = new Account(DUMMY_ACCOUNT, "0");
+  const tx = new TransactionBuilder(account, {
+    fee: "100",
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(
+      Operation.invokeContractFunction({
+        contract: contractId,
+        function: method,
+        args,
+      })
     )
-      .addOperation(
-        (await import("@stellar/stellar-sdk")).Operation.invokeContractFunction({
-          contract: contractId,
-          function: method,
-          args,
-        })
-      )
-      .setTimeout(30)
-      .build()
-  );
-  if (!result) throw new Error("no result from simulation");
-  return scValToNative((result as { retval: xdr.ScVal }).retval) as T;
+    .setTimeout(30)
+    .build();
+
+  const sim = await rpc.simulateTransaction(tx);
+
+  if (SorobanRpc.Api.isSimulationError(sim)) {
+    throw new Error(`Simulation error: ${(sim as SorobanRpc.Api.SimulateTransactionErrorResponse).error}`);
+  }
+  const success = sim as SorobanRpc.Api.SimulateTransactionSuccessResponse;
+  if (!success.result) throw new Error("no result from simulation");
+  return scValToNative(success.result.retval) as T;
 }
+
+// ── Pool state ─────────────────────────────────────────────────────────────────
 
 export interface PoolState {
   reserveToken: bigint;
   reserveXlm: bigint;
-  price: bigint; // token per XLM × 1e7
-  totalLiquidity: number; // USD-equivalent placeholder
+  price: bigint;
+  totalLiquidity: number;
 }
 
 async function fetchPoolState(): Promise<PoolState> {
   if (!CONTRACT_ADDRESSES.pool) {
     return { reserveToken: 0n, reserveXlm: 0n, price: 0n, totalLiquidity: 0 };
   }
-  const [rt, rx] = await viewCall<bigint[]>(CONTRACT_ADDRESSES.pool, "get_reserves");
+  const reserves = await viewCall<[bigint, bigint]>(CONTRACT_ADDRESSES.pool, "get_reserves");
+  const [rt, rx] = reserves;
   const price = await viewCall<bigint>(CONTRACT_ADDRESSES.pool, "get_price");
   return {
     reserveToken: rt,
@@ -57,11 +73,11 @@ export function usePoolState() {
   return useSWR("pool-state", fetchPoolState, { refreshInterval: POLL_INTERVAL });
 }
 
+// ── Balances ───────────────────────────────────────────────────────────────────
+
 async function fetchBalance(contractId: string, address: string): Promise<bigint> {
   if (!contractId || !address) return 0n;
-  return viewCall<bigint>(contractId, "balance", [
-    new Address(address).toScVal(),
-  ]);
+  return viewCall<bigint>(contractId, "balance", [new Address(address).toScVal()]);
 }
 
 export function useTokenBalance(address: string | null) {
@@ -88,7 +104,7 @@ export function useLpBalance(address: string | null) {
   );
 }
 
-// ── Price history (polled from events) ───────────────────────────────────────
+// ── Price history from events ──────────────────────────────────────────────────
 
 export interface PricePoint {
   t: number;
@@ -98,65 +114,57 @@ export interface PricePoint {
 async function fetchPriceHistory(): Promise<PricePoint[]> {
   if (!CONTRACT_ADDRESSES.pool) return [];
   const rpc = getRpc();
-  const events = await rpc.getEvents({
+  const eventsResp = await rpc.getEvents({
     startLedger: 0,
     filters: [
       {
         type: "contract",
         contractIds: [CONTRACT_ADDRESSES.pool],
-        topics: [["*", "*"]],
+        topics: [["*"]],
       },
     ],
     limit: 200,
   });
-  const points: PricePoint[] = [];
-  let runToken = 1_000_0000000n;
-  let runXlm = 4_000_0000000n;
-
-  for (const ev of events.records) {
-    const data = ev.value;
-    // Reconstruct price from native values in swap events — best effort.
-    points.push({
-      t: ev.ledger,
-      price: runXlm > 0n ? Number((runToken * 10_000_000n) / runXlm) / 1e7 : 0,
-    });
-  }
-  return points.length ? points : [];
+  const events = (eventsResp as SorobanRpc.Api.GetEventsResponse).events ?? [];
+  const points: PricePoint[] = events.map((ev: SorobanRpc.Api.EventResponse) => ({
+    t: ev.ledger,
+    price: 0, // Would be reconstructed from reserve changes in a full implementation
+  }));
+  return points;
 }
 
 export function usePriceHistory() {
   return useSWR("price-history", fetchPriceHistory, { refreshInterval: 30_000 });
 }
 
-// ── Recent activity feed ──────────────────────────────────────────────────────
+// ── Activity feed ──────────────────────────────────────────────────────────────
 
 export interface ActivityEvent {
   id: string;
   type: "swap" | "add" | "remove";
   ledger: number;
-  amountIn?: number;
-  amountOut?: number;
 }
 
 async function fetchActivity(): Promise<ActivityEvent[]> {
   if (!CONTRACT_ADDRESSES.pool) return [];
   const rpc = getRpc();
-  const events = await rpc.getEvents({
+  const eventsResp = await rpc.getEvents({
     startLedger: 0,
     filters: [
       { type: "contract", contractIds: [CONTRACT_ADDRESSES.pool], topics: [["*"]] },
     ],
     limit: 20,
   });
-  return events.records.map((ev) => ({
-    id: ev.id,
-    type: ev.topic[0]?.toString().includes("swap")
-      ? "swap"
-      : ev.topic[0]?.toString().includes("add")
-      ? "add"
-      : "remove",
-    ledger: ev.ledger,
-  }));
+  const events = (eventsResp as SorobanRpc.Api.GetEventsResponse).events ?? [];
+  return events.map((ev: SorobanRpc.Api.EventResponse) => {
+    const topic0 = ev.topic[0] ? scValToNative(ev.topic[0]) : "";
+    const t0 = String(topic0);
+    return {
+      id: ev.id,
+      type: t0.includes("swap") ? "swap" : t0.includes("add") || t0.includes("liq_add") ? "add" : "remove",
+      ledger: ev.ledger,
+    };
+  });
 }
 
 export function useActivity() {
