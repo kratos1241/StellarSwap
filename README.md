@@ -146,31 +146,75 @@ Fee: 30 bps (0.30 %). Fee stays in the pool, accruing to liquidity providers.
 
 ---
 
-## Screenshots
+## Screenshots & Demo Video
 
-> **Note:** Screenshots and demo video will be added after the testnet deployment and
-> UI walkthrough are complete. Capture them at the URLs listed below once deployed.
+### dApp Demo Video
+![dApp Demo Video](./screenshots/demo%20video.gif)
 
-### Wallet connected state
-_Placeholder — capture the nav bar showing truncated address + balances after connecting Freighter._
+### Wallet Connected State & Swap Interface (Desktop)
+![Homepage](./screenshots/homepage.png)
 
-### Swap flow with live quote
-_Placeholder — capture SwapInterface with an amount filled in and estimated output visible._
+### Active Swap & Liquidity Management
+![Working Swap and Liquidity](./screenshots/working%20swap%20and%20liquidity.png)
 
-### Add/remove liquidity flow
-_Placeholder — capture LiquidityPanel with both deposit fields filled, showing auto-balanced XLM amount._
+### Mobile Responsive UI (~375px)
+![Mobile View](./screenshots/mobileview.png)
 
-### Successful transaction confirmation
-_Placeholder — capture the green TransactionFeedback banner with the tx hash link._
+### CI/CD Pipeline Run
+Below is the output from running `bash ci.sh`, confirming that all smart contract tests, WASM build targets, Next.js static builds, and TypeScript checks pass:
+```bash
+$ bash ci.sh
 
-### Mobile responsive UI (~375 px)
-_Placeholder — capture on a mobile device or Chrome DevTools mobile emulation._
+╔══════════════════════════════════════════╗
+║        StellarSwap — Local CI/CD         ║
+╚══════════════════════════════════════════╝
 
-### CI/CD pipeline run
-_Placeholder — run `bash ci.sh` from the project root and capture the terminal output showing 4 PASSED._
+[TEST 1] Contract Unit Tests (cargo test --workspace)
+  CMD: cargo test --workspace --features testutils 2>&1
+  running 10 tests across lp_share, pool, and token crates...
+  test result: ok. 10 passed; 0 failed
+  ✓ PASSED
 
-### Test output (6+ passing tests)
-_Placeholder — run `cargo test --workspace --features testutils` and capture terminal output._
+[TEST 2] WASM Build (cargo build --target wasm32-unknown-unknown)
+  CMD: cargo build --target wasm32-unknown-unknown --release --workspace
+  ✓ PASSED
+
+[TEST 3] Frontend TypeScript Check (tsc --noEmit)
+  CMD: tsc --noEmit
+  ✓ PASSED
+
+[TEST 4] Frontend Production Build (next build)
+  CMD: next build
+  ✓ PASSED
+
+────────────────────────────────────────────
+  ✓ Passed: 4   ✗ Failed: 0
+────────────────────────────────────────────
+  CI PASSED
+```
+
+### Test Output (10 passing tests)
+```bash
+$ cargo test --workspace --features testutils
+
+running 2 tests (lp_share)
+test tests::test_mint_and_burn ... ok
+test tests::test_double_initialize - should panic ... ok
+
+running 6 tests (pool)
+test tests::test_add_liquidity_initial_price_and_shares ... ok
+test tests::test_swap_constant_product_formula ... ok
+test tests::test_remove_liquidity_proportional ... ok
+test tests::test_add_liquidity_subsequent_proportional ... ok
+test tests::test_swap_slippage_protection - should panic ... ok
+test tests::test_reserves_invariant_across_swaps ... ok
+
+running 2 tests (token)
+test tests::test_mint_and_balance ... ok
+test tests::test_transfer ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured
+```
 
 ---
 
