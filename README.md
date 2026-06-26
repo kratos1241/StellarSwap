@@ -54,9 +54,10 @@ LP minting and burning — runs in Soroban smart contracts on Stellar testnet.
 
 | Contract | Address | Stellar Expert |
 |----------|---------|----------------|
-| Token (TKN) | `PENDING — generate after deployment` | — |
-| LPShare | `PENDING — generate after deployment` | — |
-| Pool | `PENDING — generate after deployment` | — |
+| Token (TKN) | `CAKDQJWBBUFSQ4CXCCISPW66ZLE7IGFZ7MRKX5PHAKZKYXFULXQ4KX2Z` | [View](https://stellar.expert/explorer/testnet/contract/CAKDQJWBBUFSQ4CXCCISPW66ZLE7IGFZ7MRKX5PHAKZKYXFULXQ4KX2Z) |
+| LPShare | `CCZRAVH7VL7FH3PISS5DS6DTB4SWCNVOV2EN7MPIPCUQ7CRINYJWRMHQ` | [View](https://stellar.expert/explorer/testnet/contract/CCZRAVH7VL7FH3PISS5DS6DTB4SWCNVOV2EN7MPIPCUQ7CRINYJWRMHQ) |
+| Pool (AMM) | `CDSQHETZOKL7U46XUKI5LH337NXKFFRZVGZQ2JYGYMHLWIZZ4QDWLSGX` | [View](https://stellar.expert/explorer/testnet/contract/CDSQHETZOKL7U46XUKI5LH337NXKFFRZVGZQ2JYGYMHLWIZZ4QDWLSGX) |
+| XLM SAC (native) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
 
 ---
 
@@ -83,9 +84,9 @@ The LPShare contract enforces that **only the pool address** may call `mint`/`bu
 
 | Action | Transaction Hash | Link |
 |--------|-----------------|------|
-| `add_liquidity` | `PENDING — execute after deployment` | — |
-| `swap` | `PENDING — execute after deployment` | — |
-| `remove_liquidity` | `PENDING — execute after deployment` | — |
+| `add_liquidity` (1000 TKN + 4000 XLM → 20000000000 LP shares) | `b90740739231e11e0eb636571eefa1912ba36972facc1fa6cd09d2e78eabef97` | [View](https://stellar.expert/explorer/testnet/tx/b90740739231e11e0eb636571eefa1912ba36972facc1fa6cd09d2e78eabef97) |
+| `swap` (100 XLM → ~24.3 TKN, constant-product formula) | `2193c9aeab61739f024bf6f789c5417b3f4e2e3e86ea03168805804bbdbe0293` | [View](https://stellar.expert/explorer/testnet/tx/2193c9aeab61739f024bf6f789c5417b3f4e2e3e86ea03168805804bbdbe0293) |
+| `remove_liquidity` (10B shares → 4878 TKN + 20500 XLM) | `eb2c5ebf81e1a0aedc5089f58e1165876fc3b5f37093eb922e0465cffb5b4e53` | [View](https://stellar.expert/explorer/testnet/tx/eb2c5ebf81e1a0aedc5089f58e1165876fc3b5f37093eb922e0465cffb5b4e53) |
 
 ---
 

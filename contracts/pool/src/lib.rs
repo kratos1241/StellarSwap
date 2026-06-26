@@ -1,6 +1,9 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, IntoVal, Symbol, Val, Vec};
+use soroban_sdk::{
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    contract, contractimpl, contracttype, symbol_short, Address, Env, IntoVal, Symbol, Val, Vec,
+};
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
 
@@ -73,6 +76,29 @@ fn lp_burn(env: &Env, lp: &Address, from: &Address, amount: i128) {
 fn lp_total_supply(env: &Env, lp: &Address) -> i128 {
     let args: Vec<Val> = soroban_sdk::vec![env];
     env.invoke_contract::<i128>(lp, &Symbol::new(env, "total_supply"), args)
+}
+
+/// Allow the pool contract to act as the `from` in a custom token transfer.
+/// The XLM SAC handles this internally; our token needs an explicit authorization.
+fn authorize_pool_as_sender(env: &Env, token: &Address, to: &Address, amount: i128) {
+    let pool = env.current_contract_address();
+    let args: Vec<Val> = soroban_sdk::vec![
+        env,
+        pool.clone().into_val(env),
+        to.clone().into_val(env),
+        amount.into_val(env),
+    ];
+    env.authorize_as_current_contract(soroban_sdk::vec![
+        env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token.clone(),
+                fn_name: Symbol::new(env, "transfer"),
+                args,
+            },
+            sub_invocations: soroban_sdk::vec![env],
+        }),
+    ]);
 }
 
 // ─── Contract ────────────────────────────────────────────────────────────────
@@ -195,7 +221,8 @@ impl PoolContract {
         // Burn LP shares first.
         lp_burn(&env, &lp, &provider, shares);
 
-        // Return assets to provider.
+        // Return assets to provider (authorize self as sender for custom token).
+        authorize_pool_as_sender(&env, &token, &provider, token_out);
         xfer(&env, &token, &pool, &provider, token_out);
         xfer(&env, &xlm, &pool, &provider, xlm_out);
 
@@ -249,6 +276,12 @@ impl PoolContract {
         // Pull amount_in from trader.
         xfer(&env, addr_in, &trader, &pool, amount_in);
         // Push amount_out to trader.
+        // When TKN is going out (XLM in), the pool must authorize itself as sender
+        // because our custom token calls require_auth(from); the XLM SAC handles
+        // contract-as-sender internally so no extra auth needed on that side.
+        if token_in_is_xlm {
+            authorize_pool_as_sender(&env, &token, &trader, amount_out);
+        }
         xfer(&env, addr_out, &pool, &trader, amount_out);
 
         // Update reserves.
