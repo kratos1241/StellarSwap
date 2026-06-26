@@ -1,5 +1,7 @@
 # StellarSwap — Token Liquidity Pool
 
+**Live Deployment**: [lovely-daffodil-2f30f2.netlify.app](https://lovely-daffodil-2f30f2.netlify.app/)
+
 > Decentralised token swap exchange with liquidity pools on Stellar Soroban testnet.
 > Constant-product AMM (x·y = k) with a 0.30 % fee, 3-contract architecture, and a
 > clean editorial-style Next.js frontend.
