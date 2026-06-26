@@ -72,13 +72,25 @@ export default function TransactionFeedback({ status, onDismiss }: Props) {
 
 function friendlyError(msg: string): string {
   const m = msg.toLowerCase();
-  if (m.includes("insufficient balance") || m.includes("insufficient_balance"))
-    return "Insufficient balance for this transaction.";
-  if (m.includes("slippage") || m.includes("below minimum"))
-    return "Slippage too high — output would be below your minimum. Try raising your slippage tolerance.";
   if (m.includes("reject") || m.includes("denied"))
     return "Signature request was rejected.";
   if (m.includes("not installed") || m.includes("not found"))
     return "Wallet not found — please install Freighter.";
-  return msg;
+  if (m.includes("slippage") || m.includes("below minimum"))
+    return "Slippage too high — output would be below your minimum. Try raising your slippage tolerance.";
+  // SAC "resulting balance is not within the allowed range" → trying to move tokens you don't have.
+  if (m.includes("resulting balance is not within the allowed range") || m.includes("balance is not within"))
+    return "Insufficient token balance — you don't hold enough TKN/XLM for this. Swap for some TKN first.";
+  if (m.includes("insufficient balance") || m.includes("insufficient_balance"))
+    return "Insufficient balance for this transaction.";
+  if (m.includes("trustline") || m.includes("no trust"))
+    return "Missing TKN trustline — add it from the banner above first.";
+  if (m.includes("tx_bad_seq") || m.includes("badseq"))
+    return "Transaction sequence was stale — please try again.";
+  if (m.includes("error(contract, #10)") || m.includes("contract, #10"))
+    return "Insufficient token balance for this transaction.";
+  // Keep contract panic strings readable but trimmed.
+  if (m.includes("escalating error") || m.includes("vm trap"))
+    return "The contract rejected this transaction (check balances and amounts).";
+  return msg.length > 160 ? msg.slice(0, 160) + "…" : msg;
 }

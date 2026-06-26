@@ -41,16 +41,51 @@ export function getRpc() {
   return new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 }
 
-export async function simulateAndSend(
-  xdrTx: string,
+/** Best-effort stringify of an RPC sendTransaction errorResult XDR. */
+function describeSendError(errorResult: unknown): string {
+  try {
+    const r = errorResult as { result?: () => { switch?: () => { name?: string } } };
+    const name = r?.result?.()?.switch?.()?.name;
+    if (name) return name;
+  } catch {
+    /* fall through */
+  }
+  if (typeof errorResult === "string") return errorResult;
+  try {
+    return JSON.stringify(errorResult);
+  } catch {
+    return "unknown submission error";
+  }
+}
+
+/**
+ * Build a Soroban transaction from a single operation using the SOURCE ACCOUNT'S
+ * REAL on-chain sequence number, simulate it, have it signed, submit, and poll.
+ *
+ * Fetching the live sequence (via `rpc.getAccount`) is what makes submission work —
+ * a hardcoded sequence of "0" simulates fine but is rejected on submit as tx_bad_seq.
+ */
+export async function invokeContract(
+  sourceAddress: string,
+  operation: xdr.Operation,
   signFn: (xdr: string) => Promise<string>
 ): Promise<string> {
   const rpc = getRpc();
-  const tx = TransactionBuilder.fromXDR(xdrTx, Networks.TESTNET);
-  const simResult = await rpc.simulateTransaction(tx);
 
+  // Real sequence number — the critical fix.
+  const account = await rpc.getAccount(sourceAddress);
+
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(operation)
+    .setTimeout(60)
+    .build();
+
+  const simResult = await rpc.simulateTransaction(tx);
   if (SorobanRpc.Api.isSimulationError(simResult)) {
-    throw new Error(`Simulation error: ${simResult.error}`);
+    throw new Error(simResult.error);
   }
 
   const prepared = SorobanRpc.assembleTransaction(tx, simResult).build();
@@ -58,7 +93,9 @@ export async function simulateAndSend(
   const signed = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
 
   const sent = await rpc.sendTransaction(signed);
-  if (sent.status === "ERROR") throw new Error(`Send error: ${sent.errorResult}`);
+  if (sent.status === "ERROR") {
+    throw new Error(`Submission failed: ${describeSendError(sent.errorResult)}`);
+  }
 
   // Poll for confirmation.
   let result = await rpc.getTransaction(sent.hash);
@@ -68,5 +105,5 @@ export async function simulateAndSend(
   }
 
   if (result.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) return sent.hash;
-  throw new Error(`Transaction failed: ${result.status}`);
+  throw new Error(`Transaction failed on-chain: ${result.status}`);
 }

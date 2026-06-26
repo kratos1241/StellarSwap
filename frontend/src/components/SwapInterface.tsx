@@ -3,17 +3,9 @@
 import { useState, useMemo } from "react";
 import { usePoolState, useTokenBalance, useXlmBalance } from "@/hooks/usePool";
 import TransactionFeedback, { TxStatus } from "./TransactionFeedback";
-import { CONTRACT_ADDRESSES, simulateAndSend } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, invokeContract } from "@/lib/contracts";
 import { signTransaction } from "@/lib/wallet";
-import {
-  TransactionBuilder,
-  Networks,
-  BASE_FEE,
-  Operation,
-  nativeToScVal,
-  Address,
-  Account,
-} from "@stellar/stellar-sdk";
+import { Operation, nativeToScVal, Address } from "@stellar/stellar-sdk";
 
 interface Props {
   address: string | null;
@@ -62,30 +54,18 @@ export default function SwapInterface({ address }: Props) {
       const minOutRaw = BigInt(Math.round(minOut * 1e7));
       const tokenInIsXlm = dir === "xlm_to_token";
 
-      const account = new Account(address, "0");
-      const tx = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(
-          Operation.invokeContractFunction({
-            contract: CONTRACT_ADDRESSES.pool,
-            function: "swap",
-            args: [
-              new Address(address).toScVal(),
-              nativeToScVal(amountInRaw, { type: "i128" }),
-              nativeToScVal(minOutRaw, { type: "i128" }),
-              nativeToScVal(tokenInIsXlm, { type: "bool" }),
-            ],
-          })
-        )
-        .setTimeout(30)
-        .build();
+      const op = Operation.invokeContractFunction({
+        contract: CONTRACT_ADDRESSES.pool,
+        function: "swap",
+        args: [
+          new Address(address).toScVal(),
+          nativeToScVal(amountInRaw, { type: "i128" }),
+          nativeToScVal(minOutRaw, { type: "i128" }),
+          nativeToScVal(tokenInIsXlm, { type: "bool" }),
+        ],
+      });
 
-      const hash = await simulateAndSend(
-        tx.toXDR(),
-        (xdr) => signTransaction(xdr, address)
-      );
+      const hash = await invokeContract(address, op, (xdr) => signTransaction(xdr, address));
       setTxStatus({ state: "success", hash });
       setAmountIn("");
       refetchToken();

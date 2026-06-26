@@ -3,17 +3,9 @@
 import { useState } from "react";
 import { usePoolState, useTokenBalance, useXlmBalance, useLpBalance } from "@/hooks/usePool";
 import TransactionFeedback, { TxStatus } from "./TransactionFeedback";
-import { CONTRACT_ADDRESSES, simulateAndSend } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, invokeContract } from "@/lib/contracts";
 import { signTransaction } from "@/lib/wallet";
-import {
-  TransactionBuilder,
-  Networks,
-  BASE_FEE,
-  Operation,
-  nativeToScVal,
-  Address,
-  Account,
-} from "@stellar/stellar-sdk";
+import { Operation, nativeToScVal, Address } from "@stellar/stellar-sdk";
 
 interface Props {
   address: string | null;
@@ -46,6 +38,15 @@ export default function LiquidityPanel({ address }: Props) {
     if (ratio > 0) setTokenAmt(ratio > 0 ? (x / ratio).toFixed(7) : "");
   }
 
+  // ── Balance pre-validation (avoid scary on-chain simulation errors) ────────
+
+  const addTokenNum = parseFloat(tokenAmt) || 0;
+  const addXlmNum = parseFloat(xlmAmt) || 0;
+  const notEnoughToken =
+    tokenBal !== undefined && addTokenNum > 0 && addTokenNum * 1e7 > Number(tokenBal);
+  const notEnoughXlm =
+    xlmBal !== undefined && addXlmNum > 0 && addXlmNum * 1e7 > Number(xlmBal);
+
   // ── Add liquidity ────────────────────────────────────────────────────────
 
   async function handleAdd() {
@@ -55,25 +56,16 @@ export default function LiquidityPanel({ address }: Props) {
     if (!tAmt || !xAmt) return;
     setTxStatus({ state: "pending" });
     try {
-      const account = new Account(address, "0");
-      const tx = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(
-          Operation.invokeContractFunction({
-            contract: CONTRACT_ADDRESSES.pool,
-            function: "add_liquidity",
-            args: [
-              new Address(address).toScVal(),
-              nativeToScVal(BigInt(Math.round(tAmt * 1e7)), { type: "i128" }),
-              nativeToScVal(BigInt(Math.round(xAmt * 1e7)), { type: "i128" }),
-            ],
-          })
-        )
-        .setTimeout(30)
-        .build();
-      const hash = await simulateAndSend(tx.toXDR(), (xdr) => signTransaction(xdr, address));
+      const op = Operation.invokeContractFunction({
+        contract: CONTRACT_ADDRESSES.pool,
+        function: "add_liquidity",
+        args: [
+          new Address(address).toScVal(),
+          nativeToScVal(BigInt(Math.round(tAmt * 1e7)), { type: "i128" }),
+          nativeToScVal(BigInt(Math.round(xAmt * 1e7)), { type: "i128" }),
+        ],
+      });
+      const hash = await invokeContract(address, op, (xdr) => signTransaction(xdr, address));
       setTxStatus({ state: "success", hash });
       setTokenAmt(""); setXlmAmt("");
       refetchToken(); refetchXlm(); refetchLp(); refetchPool();
@@ -91,24 +83,15 @@ export default function LiquidityPanel({ address }: Props) {
     if (sharesToBurn <= 0n) return;
     setTxStatus({ state: "pending" });
     try {
-      const account = new Account(address, "0");
-      const tx = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(
-          Operation.invokeContractFunction({
-            contract: CONTRACT_ADDRESSES.pool,
-            function: "remove_liquidity",
-            args: [
-              new Address(address).toScVal(),
-              nativeToScVal(sharesToBurn, { type: "i128" }),
-            ],
-          })
-        )
-        .setTimeout(30)
-        .build();
-      const hash = await simulateAndSend(tx.toXDR(), (xdr) => signTransaction(xdr, address));
+      const op = Operation.invokeContractFunction({
+        contract: CONTRACT_ADDRESSES.pool,
+        function: "remove_liquidity",
+        args: [
+          new Address(address).toScVal(),
+          nativeToScVal(sharesToBurn, { type: "i128" }),
+        ],
+      });
+      const hash = await invokeContract(address, op, (xdr) => signTransaction(xdr, address));
       setTxStatus({ state: "success", hash });
       refetchToken(); refetchXlm(); refetchLp(); refetchPool();
     } catch (e: unknown) {
@@ -161,9 +144,18 @@ export default function LiquidityPanel({ address }: Props) {
             <input className="input" type="number" placeholder="0.0000000" value={xlmAmt}
               onChange={(e) => syncToken(e.target.value)} />
           </div>
+          {notEnoughToken && (
+            <p className="text-xs text-danger">
+              Insufficient TKN balance. Swap some XLM → TKN first to get TKN, then add liquidity.
+            </p>
+          )}
+          {notEnoughXlm && <p className="text-xs text-danger">Insufficient XLM balance.</p>}
           <button
             className="btn-primary w-full"
-            disabled={!address || !tokenAmt || !xlmAmt || txStatus.state === "pending"}
+            disabled={
+              !address || !tokenAmt || !xlmAmt || notEnoughToken || notEnoughXlm ||
+              txStatus.state === "pending"
+            }
             onClick={handleAdd}
           >
             {!address ? "Connect wallet" : txStatus.state === "pending" ? "Adding…" : "Add Liquidity"}
