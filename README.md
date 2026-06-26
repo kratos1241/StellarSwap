@@ -1,7 +1,7 @@
 # StellarSwap — Token Liquidity Pool
 
 [![CI Build Status](https://github.com/kratos1241/StellarSwap/actions/workflows/ci.yml/badge.svg)](https://github.com/kratos1241/StellarSwap/actions/workflows/ci.yml)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/lovely-daffodil-2f30f2/deploy-status)](https://app.netlify.com/sites/lovely-daffodil-2f30f2/deploys)
+[![Netlify Status](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify)](https://lovely-daffodil-2f30f2.netlify.app/)
 
 **Live Deployment**: [lovely-daffodil-2f30f2.netlify.app](https://lovely-daffodil-2f30f2.netlify.app/)
 
