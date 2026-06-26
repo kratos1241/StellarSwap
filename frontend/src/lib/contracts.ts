@@ -2,6 +2,18 @@ import { SorobanRpc, TransactionBuilder, Networks, BASE_FEE, xdr } from "@stella
 
 export const NETWORK = (process.env.NEXT_PUBLIC_NETWORK ?? "testnet") as "testnet" | "mainnet";
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? "https://soroban-testnet.stellar.org";
+export const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL ?? "https://horizon-testnet.stellar.org";
+
+// TKN classic asset (issued on Stellar, wrapped as the SAC in CONTRACT_ADDRESSES.token).
+export const TKN_ASSET = {
+  code: process.env.NEXT_PUBLIC_TKN_ASSET_CODE ?? "TKN",
+  issuer: process.env.NEXT_PUBLIC_TKN_ISSUER ?? "",
+} as const;
+
+export const NETWORK_PASSPHRASE =
+  NETWORK === "mainnet"
+    ? "Public Global Stellar Network ; September 2015"
+    : "Test SDF Network ; September 2015";
 
 export const CONTRACT_ADDRESSES = {
   token:   process.env.NEXT_PUBLIC_TOKEN_CONTRACT   ?? "",

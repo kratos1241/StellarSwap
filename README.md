@@ -52,11 +52,16 @@ LP minting and burning — runs in Soroban smart contracts on Stellar testnet.
 
 ## Smart Contracts (Testnet)
 
-| Contract | Address | Stellar Expert |
+**TKN is a classic Stellar asset (`TKN:ISSUER`) wrapped as a Stellar Asset Contract (SAC).**
+This makes it a real, wallet-visible asset: holders add a `changeTrust` trustline and it
+appears in Freighter. The pool trades the TKN SAC against the native-XLM SAC.
+
+| Contract / Entity | Address | Stellar Expert |
 |----------|---------|----------------|
-| Token (TKN) | `CAKDQJWBBUFSQ4CXCCISPW66ZLE7IGFZ7MRKX5PHAKZKYXFULXQ4KX2Z` | [View](https://stellar.expert/explorer/testnet/contract/CAKDQJWBBUFSQ4CXCCISPW66ZLE7IGFZ7MRKX5PHAKZKYXFULXQ4KX2Z) |
-| LPShare | `CCZRAVH7VL7FH3PISS5DS6DTB4SWCNVOV2EN7MPIPCUQ7CRINYJWRMHQ` | [View](https://stellar.expert/explorer/testnet/contract/CCZRAVH7VL7FH3PISS5DS6DTB4SWCNVOV2EN7MPIPCUQ7CRINYJWRMHQ) |
-| Pool (AMM) | `CDSQHETZOKL7U46XUKI5LH337NXKFFRZVGZQ2JYGYMHLWIZZ4QDWLSGX` | [View](https://stellar.expert/explorer/testnet/contract/CDSQHETZOKL7U46XUKI5LH337NXKFFRZVGZQ2JYGYMHLWIZZ4QDWLSGX) |
+| TKN SAC (traded token) | `CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHTJ3JY` | [View](https://stellar.expert/explorer/testnet/contract/CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHTJ3JY) |
+| TKN classic issuer | `GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4` | [View](https://stellar.expert/explorer/testnet/account/GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4) |
+| LPShare | `CDAVFHBKB6SOS2ZZC6FCDXNEDONVCWFJ42PHZLKBD2K5L22IXPBNAEPY` | [View](https://stellar.expert/explorer/testnet/contract/CDAVFHBKB6SOS2ZZC6FCDXNEDONVCWFJ42PHZLKBD2K5L22IXPBNAEPY) |
+| Pool (AMM) | `CCXGURC642G32RZ4LLJFY26NE5VVBQAHWKHOA3XKWBH3N77QBES5BYVD` | [View](https://stellar.expert/explorer/testnet/contract/CCXGURC642G32RZ4LLJFY26NE5VVBQAHWKHOA3XKWBH3N77QBES5BYVD) |
 | XLM SAC (native) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
 
 ---
@@ -82,11 +87,19 @@ The LPShare contract enforces that **only the pool address** may call `mint`/`bu
 
 ### Transaction Hash Evidence
 
+All against the live classic-asset pool (`CCXGURC6…BYVD`). The events show the TKN SAC
+moving `TKN:GD735N6V…` and the native SAC moving XLM — proving real Pool → Token SAC calls.
+
 | Action | Transaction Hash | Link |
 |--------|-----------------|------|
-| `add_liquidity` (1000 TKN + 4000 XLM → 20000000000 LP shares) | `b90740739231e11e0eb636571eefa1912ba36972facc1fa6cd09d2e78eabef97` | [View](https://stellar.expert/explorer/testnet/tx/b90740739231e11e0eb636571eefa1912ba36972facc1fa6cd09d2e78eabef97) |
-| `swap` (100 XLM → ~24.3 TKN, constant-product formula) | `2193c9aeab61739f024bf6f789c5417b3f4e2e3e86ea03168805804bbdbe0293` | [View](https://stellar.expert/explorer/testnet/tx/2193c9aeab61739f024bf6f789c5417b3f4e2e3e86ea03168805804bbdbe0293) |
-| `remove_liquidity` (10B shares → 4878 TKN + 20500 XLM) | `eb2c5ebf81e1a0aedc5089f58e1165876fc3b5f37093eb922e0465cffb5b4e53` | [View](https://stellar.expert/explorer/testnet/tx/eb2c5ebf81e1a0aedc5089f58e1165876fc3b5f37093eb922e0465cffb5b4e53) |
+| `add_liquidity` (1000 TKN + 4000 XLM → 20000000000 LP shares) | `2fc80a87ef5a4e8ff1def151a834c77e09fc8d8478aeafcaf3ee65e40b4bc0f9` | [View](https://stellar.expert/explorer/testnet/tx/2fc80a87ef5a4e8ff1def151a834c77e09fc8d8478aeafcaf3ee65e40b4bc0f9) |
+| `swap` (100 XLM → ~24.3 TKN, constant-product formula) | `1ef80b0e937ddfa0128d9a2cfb02b4e526fa61cba7a8838ef0b79b68832c9251` | [View](https://stellar.expert/explorer/testnet/tx/1ef80b0e937ddfa0128d9a2cfb02b4e526fa61cba7a8838ef0b79b68832c9251) |
+| `remove_liquidity` (5B shares → ~243.9 TKN + 1025 XLM) | `76d530c09d445c1e44d27af0fd68203cc79e6186e994032a73d6ad710866ca64` | [View](https://stellar.expert/explorer/testnet/tx/76d530c09d445c1e44d27af0fd68203cc79e6186e994032a73d6ad710866ca64) |
+
+> **Trustline note:** because TKN is now a classic asset, the frontend includes an
+> **Add TKN Trustline** button (`TrustlineBanner.tsx` → classic `changeTrust` op) shown
+> whenever the connected wallet hasn't yet trusted TKN. Until that trustline exists, the
+> wallet cannot hold or receive TKN.
 
 ---
 
@@ -95,6 +108,8 @@ The LPShare contract enforces that **only the pool address** may call `mint`/`bu
 - Click **Connect Wallet** in the top-right header.
 - StellarWalletsKit opens a modal listing available wallets (Freighter as primary).
 - After approval the address (truncated) appears in the nav alongside live TKN and XLM balances.
+- If the wallet hasn't trusted TKN yet, an **Add TKN Trustline** banner appears — one click signs a
+  classic `changeTrust` op so TKN becomes holdable and visible in Freighter.
 - Click **Disconnect** to clear the session.
 
 ---
@@ -126,6 +141,8 @@ Fee: 30 bps (0.30 %). Fee stays in the pool, accruing to liquidity providers.
 | **User rejected signature** | `WalletConnect.tsx` + `TransactionFeedback` | "Signature request was rejected." |
 | **Insufficient balance** | Pre-validate in `SwapInterface.tsx` before submit; contract also panics | "Insufficient balance for this transaction." |
 | **Slippage failure** | Caught from contract error string in `TransactionFeedback.tsx` | "Slippage too high — output would be below your minimum." |
+| **Missing TKN trustline** | `TrustlineBanner.tsx` (detects via Horizon, offers one-click fix) | "Add the TKN trustline to your wallet…" |
+| **Unfunded account** | `TrustlineBanner.tsx` (Horizon 404 → Friendbot link) | "This wallet doesn't exist on testnet…" |
 
 ---
 

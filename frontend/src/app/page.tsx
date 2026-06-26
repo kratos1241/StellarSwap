@@ -4,11 +4,12 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 
 // All these components touch localStorage / browser APIs — load them client-side only.
-const WalletConnect  = dynamic(() => import("@/components/WalletConnect"),  { ssr: false });
-const SwapInterface  = dynamic(() => import("@/components/SwapInterface"),  { ssr: false });
-const LiquidityPanel = dynamic(() => import("@/components/LiquidityPanel"), { ssr: false });
-const PoolStats      = dynamic(() => import("@/components/PoolStats"),      { ssr: false });
-const ActivityFeed   = dynamic(() => import("@/components/ActivityFeed"),   { ssr: false });
+const WalletConnect   = dynamic(() => import("@/components/WalletConnect"),   { ssr: false });
+const TrustlineBanner = dynamic(() => import("@/components/TrustlineBanner"), { ssr: false });
+const SwapInterface   = dynamic(() => import("@/components/SwapInterface"),   { ssr: false });
+const LiquidityPanel  = dynamic(() => import("@/components/LiquidityPanel"),  { ssr: false });
+const PoolStats       = dynamic(() => import("@/components/PoolStats"),       { ssr: false });
+const ActivityFeed    = dynamic(() => import("@/components/ActivityFeed"),    { ssr: false });
 
 export default function Home() {
   const [address, setAddress] = useState<string | null>(null);
@@ -45,6 +46,8 @@ export default function Home() {
             Constant-product AMM · 0.30 % fee · swap tokens or provide liquidity to earn.
           </p>
         </div>
+
+        <TrustlineBanner address={address} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SwapInterface  address={address} />
