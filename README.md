@@ -32,8 +32,8 @@ LP minting and burning — runs in Soroban smart contracts on Stellar testnet.
         │ Freighter                     │
         ▼                     ┌─────────▼──────────┐   ┌────────────────┐
  StellarWalletsKit             │   Token Contract   │   │ LPShare Token  │
-                               │   (TKN, SEP-41)    │   │ mint / burn    │
-                               └────────────────────┘   └────────────────┘
+                                │   (TKN, SEP-41)    │   │ mint / burn    │
+                                └────────────────────┘   └────────────────┘
 
  Pool → Token   : transfer on every add/remove/swap (pull assets from user or push to user)
  Pool → LPShare : mint on add_liquidity, burn on remove_liquidity
@@ -63,11 +63,11 @@ appears in Freighter. The pool trades the TKN SAC against the native-XLM SAC.
 
 | Contract / Entity | Address | Stellar Expert |
 |----------|---------|----------------|
-| TKN SAC (traded token) | `CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHTJ3JY` | [View](https://stellar.expert/explorer/testnet/contract/CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHTJ3JY) |
-| TKN classic issuer | `GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4` | [View](https://stellar.expert/explorer/testnet/account/GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4) |
+| TKN SAC (traded token) | `CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHTJ3JY` | [View](https://stellar.expert/explorer/testnet/contract/CBH4HBF6IQBGFOMOBBQ343AOB7YTUAXKYYKF7DRU666CHDPOULHT[...]
+| TKN classic issuer | `GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4` | [View](https://stellar.expert/explorer/testnet/account/GD735N6V74W4VXGI7R3GA4M6WJ5XQQ3ZYYZAIAKPNX2MRHOCRC7LJNE4)[...]
 | LPShare | `CDAVFHBKB6SOS2ZZC6FCDXNEDONVCWFJ42PHZLKBD2K5L22IXPBNAEPY` | [View](https://stellar.expert/explorer/testnet/contract/CDAVFHBKB6SOS2ZZC6FCDXNEDONVCWFJ42PHZLKBD2K5L22IXPBNAEPY) |
 | Pool (AMM) | `CCXGURC642G32RZ4LLJFY26NE5VVBQAHWKHOA3XKWBH3N77QBES5BYVD` | [View](https://stellar.expert/explorer/testnet/contract/CCXGURC642G32RZ4LLJFY26NE5VVBQAHWKHOA3XKWBH3N77QBES5BYVD) |
-| XLM SAC (native) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
+| XLM SAC (native) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) [...]
 
 ---
 
@@ -97,9 +97,9 @@ moving `TKN:GD735N6V…` and the native SAC moving XLM — proving real Pool →
 
 | Action | Transaction Hash | Link |
 |--------|-----------------|------|
-| `add_liquidity` (1000 TKN + 4000 XLM → 20000000000 LP shares) | `2fc80a87ef5a4e8ff1def151a834c77e09fc8d8478aeafcaf3ee65e40b4bc0f9` | [View](https://stellar.expert/explorer/testnet/tx/2fc80a87ef5a4e8ff1def151a834c77e09fc8d8478aeafcaf3ee65e40b4bc0f9) |
-| `swap` (100 XLM → ~24.3 TKN, constant-product formula) | `1ef80b0e937ddfa0128d9a2cfb02b4e526fa61cba7a8838ef0b79b68832c9251` | [View](https://stellar.expert/explorer/testnet/tx/1ef80b0e937ddfa0128d9a2cfb02b4e526fa61cba7a8838ef0b79b68832c9251) |
-| `remove_liquidity` (5B shares → ~243.9 TKN + 1025 XLM) | `76d530c09d445c1e44d27af0fd68203cc79e6186e994032a73d6ad710866ca64` | [View](https://stellar.expert/explorer/testnet/tx/76d530c09d445c1e44d27af0fd68203cc79e6186e994032a73d6ad710866ca64) |
+| `add_liquidity` (1000 TKN + 4000 XLM → 20000000000 LP shares) | `2fc80a87ef5a4e8ff1def151a834c77e09fc8d8478aeafcaf3ee65e40b4bc0f9` | [View](https://stellar.expert/explorer/testnet/tx/2fc80a87[...]
+| `swap` (100 XLM → ~24.3 TKN, constant-product formula) | `1ef80b0e937ddfa0128d9a2cfb02b4e526fa61cba7a8838ef0b79b68832c9251` | [View](https://stellar.expert/explorer/testnet/tx/1ef80b0e937ddfa[...]
+| `remove_liquidity` (5B shares → ~243.9 TKN + 1025 XLM) | `76d530c09d445c1e44d27af0fd68203cc79e6186e994032a73d6ad710866ca64` | [View](https://stellar.expert/explorer/testnet/tx/76d530c09d445c1[...]
 
 > **Trustline note:** because TKN is now a classic asset, the frontend includes an
 > **Add TKN Trustline** button (`TrustlineBanner.tsx` → classic `changeTrust` op) shown
@@ -165,11 +165,20 @@ Fee: 30 bps (0.30 %). Fee stays in the pool, accruing to liquidity providers.
 ### Mobile Responsive UI (~375px)
 ![Mobile View](./screenshots/mobileview.png)
 
-### CI/CD Pipeline
+### CI/CD Pipeline Running
+![CI/CD Pipeline](./screenshots/CI/CD%20pipeline%20running.png)
+
+### Test Output with 3+ Passing Tests
+![Test Output](./screenshots/Test%20output%20with%203%2B%20passing%20tests.png)
+
+---
+
+## CI/CD Integration
+
 Our CI/CD pipeline runs **4 separate parallel jobs** on GitHub Actions for every commit and pull request to ensure the stability of both the smart contracts and the frontend:
 
 1. **🧪 Contract Unit Tests**: Runs all 10 Rust unit tests across `token`, `lp_share`, and `pool` crates using `cargo test --workspace --features testutils`.
-2. **📦 Contract WASM Build**: Compiles all contracts to WebAssembly using `cargo build --target wasm32-unknown-unknown --release --workspace` to ensure they build successfully for the Soroban environment.
+2. **📦 Contract WASM Build**: Compiles all contracts to WebAssembly using `cargo build --target wasm32-unknown-unknown --release --workspace` to ensure they build successfully for the Soroban [...]
 3. **🔍 Frontend TypeScript Check**: Runs static type check verification on the Next.js app using `tsc --noEmit` to prevent typescript regressions.
 4. **🚀 Frontend Production Build**: Runs a production build and static HTML export via `next build` to confirm zero bundler/optimization issues.
 
