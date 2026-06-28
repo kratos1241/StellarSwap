@@ -299,7 +299,7 @@ stellar contract invoke --id $POOL_ID  --source deployer --network testnet \
 ## Testing
 
 ```bash
-# All contract unit tests (8 tests across 3 crates)
+# All contract unit tests (10 tests across 3 crates)
 cargo test --workspace --features testutils
 
 # Expected output:
